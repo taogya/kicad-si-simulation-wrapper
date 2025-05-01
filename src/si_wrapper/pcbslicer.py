@@ -7,7 +7,6 @@ from typing import Any, Iterable
 
 import numpy as np
 import pcbnew
-
 import si_wrapper.constant as const
 
 logger = logging.getLogger(__name__)
@@ -107,7 +106,7 @@ class PCBSlice:
 
                 track_length += track.GetLength()
                 track_widths = track.GetWidth()
-                impedance_str = re.search("^\d+", track.GetNetClassName())
+                impedance_str = re.search(r"^\d+", track.GetNetClassName())
                 assert impedance_str is not None
 
                 impedance = int(impedance_str.group())
@@ -372,7 +371,7 @@ class PCBSlice:
                 if (pcbnew.ToMM(fp_x) - 1 < x < pcbnew.ToMM(fp_x) + 1) and (
                     pcbnew.ToMM(fp_y) - 1 < y < pcbnew.ToMM(fp_y) + 1
                 ):
-                    if re.search("SP\d+", str(footprint.GetReference())) is None:
+                    if re.search(r"SP\d+", str(footprint.GetReference())) is None:
                         self.board.Remove(footprint)
 
     def remove_footprints(self, edges: list) -> list:
@@ -713,21 +712,20 @@ class PCBSlice:
                         x, y = pcbnew.ToMM(otrack.GetStart())
                         theta = self.calculate_orientation(otrack.GetStart(), otrack.GetEnd())
 
-            match theta:
-                case 0:
-                    y = y + 0.5
-                case 90 | -270:
-                    x = x + 0.5
-                case -90 | 270:
-                    x = x - 0.5
-                case -180:
-                    y = y - 0.5
-                case -45 | -315:
-                    y = y + 0.5
-                    theta = 0
-                case -135 | -225:
-                    y = y - 0.5
-                    theta = 180
+            if theta == 0:
+                y = y + 0.5
+            elif theta == 90 or theta == -270:
+                x = x + 0.5
+            elif theta == -90 or theta == 270:
+                x = x - 0.5
+            elif theta == -180:
+                y = y - 0.5
+            elif theta == -45 or theta == -315:
+                y = y + 0.5
+                theta = 0
+            elif theta == -135 or theta == -225:
+                y = y - 0.5
+                theta = 180
 
             orient_eda = pcbnew.EDA_ANGLE(theta, pcbnew.DEGREES_T)
             self.SimPortFootprint.SetOrientation(orient_eda)
@@ -750,11 +748,11 @@ class PCBSlice:
 
     def replace_resistors_and_capacitors(self) -> None:
         """Replace every R0 and Capacitor with an track."""
-        pattern = "((C_\d*[munp])|(R_0R))_.*"
+        pattern = r"((C_\d*[munp])|(R_0R))_.*"
         defined_width = 150000
 
-        pad2: pcbnew.PCB_PAD_T = 0
-        pad1: pcbnew.PCB_PAD_T = 0
+        pad2 = 0
+        pad1 = 0
 
         for component1 in self.board.GetFootprints():
             for component2 in self.board.GetFootprints():
@@ -797,21 +795,20 @@ class PCBSlice:
             #     orient_eda = pcbnew.EDA_ANGLE(orient, pcbnew.DEGREES_T)
             #     self.SimPortFootprint.SetOrientation(orient_eda)
 
-            match orient:
-                case 0:
-                    y = y + 0.5
-                case 90 | -270:
-                    x = x + 0.5
-                case -90 | 270:
-                    x = x - 0.5
-                case -180:
-                    y = y - 0.5
-                case -45 | -315:
-                    y = y + 0.5
-                    orient = 0
-                case -135 | -225:
-                    y = y - 0.5
-                    orient = 180
+            if orient == 0:
+                y = y + 0.5
+            elif orient == 90 or orient == -270:
+                x = x + 0.5
+            elif orient == -90 or orient == 270:
+                x = x - 0.5
+            elif orient == -180:
+                y = y - 0.5
+            elif orient == -45 or orient == -315:
+                y = y + 0.5
+                orient = 0
+            elif orient == -135 or orient == -225:
+                y = y - 0.5
+                orient = 180
 
             orient_eda = pcbnew.EDA_ANGLE(orient, pcbnew.DEGREES_T)
             self.SimPortFootprint.SetOrientation(orient_eda)
@@ -890,43 +887,42 @@ class PCBSlice:
                 xe = end_pos[n][0]
                 ye = end_pos[n][1]
 
-                match orient:
-                    case 0 | -180:
-                        rule = (
-                            (xs - offset < pcbnew.ToMM(track.GetEnd()[0]) < xs + offset)
-                            or (xs - offset < pcbnew.ToMM(track.GetStart()[0]) < xs + offset)
-                        ) and (
-                            (ys < pcbnew.ToMM(track.GetEnd()[1]) < ye)
-                            or (ys < pcbnew.ToMM(track.GetStart()[1]) < ye)
-                            or (ye < pcbnew.ToMM(track.GetEnd()[1]) < ys)
-                            or (ye < pcbnew.ToMM(track.GetStart()[1]) < ys)
-                        )
+                if orient == 0 or orient == -180:
+                    rule = (
+                        (xs - offset < pcbnew.ToMM(track.GetEnd()[0]) < xs + offset)
+                        or (xs - offset < pcbnew.ToMM(track.GetStart()[0]) < xs + offset)
+                    ) and (
+                        (ys < pcbnew.ToMM(track.GetEnd()[1]) < ye)
+                        or (ys < pcbnew.ToMM(track.GetStart()[1]) < ye)
+                        or (ye < pcbnew.ToMM(track.GetEnd()[1]) < ys)
+                        or (ye < pcbnew.ToMM(track.GetStart()[1]) < ys)
+                    )
 
-                        if np.abs(xs - pcbnew.ToMM(track.GetStart()[0])) < np.abs(xs - pcbnew.ToMM(track.GetEnd()[0])):
-                            diff_x = np.abs(xs - pcbnew.ToMM(track.GetStart()[0]))
-                        else:
-                            diff_x = np.abs(xs - pcbnew.ToMM(track.GetEnd()[0]))
-                        diff_y = 255
+                    if np.abs(xs - pcbnew.ToMM(track.GetStart()[0])) < np.abs(xs - pcbnew.ToMM(track.GetEnd()[0])):
+                        diff_x = np.abs(xs - pcbnew.ToMM(track.GetStart()[0]))
+                    else:
+                        diff_x = np.abs(xs - pcbnew.ToMM(track.GetEnd()[0]))
+                    diff_y = 255
 
-                    case -90 | -270:
-                        rule = (
-                            (ys - offset < pcbnew.ToMM(track.GetEnd()[1]) < ys + offset)
-                            or (ys - offset < pcbnew.ToMM(track.GetStart()[1]) < ys + offset)
-                        ) and (
-                            (xs < pcbnew.ToMM(track.GetEnd()[0]) < xe)
-                            or (xs < pcbnew.ToMM(track.GetStart()[0]) < xe)
-                            or (xe < pcbnew.ToMM(track.GetEnd()[0]) < xs)
-                            or (xe < pcbnew.ToMM(track.GetStart()[0]) < xs)
-                        )
+                elif orient == -90 or orient == -270:
+                    rule = (
+                        (ys - offset < pcbnew.ToMM(track.GetEnd()[1]) < ys + offset)
+                        or (ys - offset < pcbnew.ToMM(track.GetStart()[1]) < ys + offset)
+                    ) and (
+                        (xs < pcbnew.ToMM(track.GetEnd()[0]) < xe)
+                        or (xs < pcbnew.ToMM(track.GetStart()[0]) < xe)
+                        or (xe < pcbnew.ToMM(track.GetEnd()[0]) < xs)
+                        or (xe < pcbnew.ToMM(track.GetStart()[0]) < xs)
+                    )
 
-                        if np.abs(ys - pcbnew.ToMM(track.GetStart()[1])) < np.abs(ys - pcbnew.ToMM(track.GetEnd()[1])):
-                            diff_y = np.abs(ys - pcbnew.ToMM(track.GetStart()[1]))
-                        else:
-                            diff_y = np.abs(ys - pcbnew.ToMM(track.GetEnd()[1]))
-                        diff_x = 255
+                    if np.abs(ys - pcbnew.ToMM(track.GetStart()[1])) < np.abs(ys - pcbnew.ToMM(track.GetEnd()[1])):
+                        diff_y = np.abs(ys - pcbnew.ToMM(track.GetStart()[1]))
+                    else:
+                        diff_y = np.abs(ys - pcbnew.ToMM(track.GetEnd()[1]))
+                    diff_x = 255
 
-                    case _:
-                        rule = None
+                else:
+                    rule = None
 
                 if rule:
                     if oldname == track_name:
@@ -972,14 +968,14 @@ class PCBSlice:
         old_names: list[int] = []
         sp_list = []
         for fp in self.board.GetFootprints():
-            if re.search("SP\d+", str(fp.GetReference())):
+            if re.search(r"SP\d+", str(fp.GetReference())):
                 # print(fp.GetReference())
                 sp_list.append(fp)
 
         sp_list.sort(key=lambda x: self.sort_key(x.GetReference()))
 
         for sp in sp_list:
-            old_names.append(int(re.findall("\d+", str(sp.GetReference()))[0]))
+            old_names.append(int(re.findall(r"\d+", str(sp.GetReference()))[0]))
             # print(old_names[sp_index])
             # print(sp.GetReference())
             sp.SetReference(f"SP{sp_index}")
@@ -1004,8 +1000,8 @@ class PCBSlice:
 
         # Append footprints to remove
         for fp in self.board.Footprints():
-            if re.search("SP\d+", str(fp.GetReference())):
-                fp.SetReference(int(re.findall("\d+", str(fp.GetReference()))[0]))
+            if re.search(r"SP\d+", str(fp.GetReference())):
+                fp.SetReference(int(re.findall(r"\d+", str(fp.GetReference()))[0]))
                 fp.Reference().SetVisible(True)
             else:
                 to_remove.append(fp)

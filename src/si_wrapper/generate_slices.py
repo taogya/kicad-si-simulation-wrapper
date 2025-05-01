@@ -3,17 +3,17 @@
 import logging
 import os
 import sys
-from typing import Any, Annotated, List
 from pathlib import Path
+from typing import Annotated, Any, List
 
 import coloredlogs
 import typer
-
 from si_wrapper.config import NetInformation, PortConfig, Settings
 from si_wrapper.pcbslicer import PCBSlice, const, netclass_list
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
+
 
 def setup_logging(debug) -> None:
     """Set up logging based on command line arguments."""
@@ -135,9 +135,9 @@ def get_ports_placement_info(first_net_ports: list, second_net_ports: list, is_d
 
 @app.command("slice")
 def main(config_file: Annotated[Path, typer.Option("--file", "-f", help="Path to settings file")],
-          list_nets: Annotated[bool, typer.Option("--list", "-l", help="List Net classes with corresponding nets")] = False,
-          debug: Annotated[bool, typer.Option("--debug", help="Increase logs verbosity")] = False
-          ):
+         list_nets: Annotated[bool, typer.Option("--list", "-l", help="List Net classes with corresponding nets")] = False,
+         debug: Annotated[bool, typer.Option("--debug", help="Increase logs verbosity")] = False
+         ):
     """Generate slices for chosen PCB."""
     is_diff = False
     plane = 0

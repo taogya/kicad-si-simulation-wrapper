@@ -6,11 +6,10 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 
 import pcbnew
 import typer
-
 from si_wrapper.constant import PCB_EXTENSION, REGEX_IMPEDANCE_PATT
 
 logger = logging.getLogger(__name__)
@@ -61,7 +60,7 @@ class SettingCreator:
             json.dump(data, simulation_json, indent=2)
 
 
-def get_pcb_path() -> str | None:
+def get_pcb_path() -> Optional[str]:
     """Check if file with .kicad_pcb extension exists in current folder."""
     for file in os.listdir():
         if file.endswith(PCB_EXTENSION):

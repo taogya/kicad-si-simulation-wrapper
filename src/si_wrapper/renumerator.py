@@ -2,17 +2,20 @@
 
 import logging
 import os
+from typing import Optional
 
+import typer
 from si_wrapper.config import NetInformation, PortConfig
 from si_wrapper.pcbslicer import PCBSlice, const
-import typer
+
 # import subprocess
 
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
 
-def get_pcb_path() -> str | None:
+
+def get_pcb_path() -> Optional[str]:
     """Check if file with .kicad_pcb extension exists in current folder."""
     for file in os.listdir():
         if file.endswith(const.PCB_EXTENSION):
