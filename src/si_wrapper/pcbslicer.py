@@ -618,10 +618,10 @@ class PCBSlice:
                             current_pos = s_tr
                             phi = self.calculate_orientation(s_tr, e_tr)
 
-                        if len(included_pads) and pad.GetParent().GetReference() in included_pads:
+                        if len(included_pads) and pad.GetParentFootprint().GetReference() in included_pads:
                             position.append(current_pos)
                             orientation.append(phi)
-                        elif len(excluded_pads) and pad.GetParent().GetReference() not in excluded_pads:
+                        elif len(excluded_pads) and pad.GetParentFootprint().GetReference() not in excluded_pads:
                             position.append(current_pos)
                             orientation.append(phi)
                         elif len(included_pads) == 0 and len(excluded_pads) == 0:
@@ -959,7 +959,7 @@ class PCBSlice:
                 if condition is None:
                     self.board.Remove(footprint)
                 else:
-                    if pad.GetNetname() not in condition and pad.GetNetname not in self.netname:
+                    if pad.GetNetname() not in condition and pad.GetNetname() not in self.netname:
                         self.board.Remove(footprint)
 
     def renumerate_simulation_ports(self) -> list[int]:
