@@ -27,7 +27,8 @@ class PCBSlice:
 
         fp_name = const.FP_NAME
         self.SimPortFootprint = pcbnew.FootprintLoad(const.FP_LIB_PATH, fp_name)
-        self.SimPortFootprint.Reference().SetVisible(False)
+        self.SimPortFootprint.Reference().SetVisible(True)
+        self.SimPortFootprint.SetExcludedFromPosFiles(False)
 
     def ci_dict(self) -> str:
         """Return pattern matching Antmicro standard."""
@@ -627,7 +628,7 @@ class PCBSlice:
                         elif len(included_pads) == 0 and len(excluded_pads) == 0:
                             position.append(current_pos)
                             orientation.append(phi)
-                        break
+                        # break
 
         return position, orientation, flip
 
