@@ -732,10 +732,10 @@ class PCBSlice:
             self.SimPortFootprint.SetOrientation(orient_eda)
 
             self.SimPortFootprint.SetPosition(pcbnew.VECTOR2I_MM(float(x), float(y)))
-            self.SimPortFootprint.SetReference(f"SP{PCBSlice.static_sp_index}")
+            self.SimPortFootprint.SetReference(f"SP{self.static_sp_index}")
             sp_instance = self.SimPortFootprint.Duplicate()
             self.board.Add(sp_instance)
-            PCBSlice.static_sp_index += 1
+            self.static_sp_index += 1
             return 0
 
         new_via = pcbnew.PCB_VIA(self.board)
@@ -815,12 +815,12 @@ class PCBSlice:
             self.SimPortFootprint.SetOrientation(orient_eda)
 
             self.SimPortFootprint.SetPosition(pcbnew.VECTOR2I_MM(x, y))
-            self.SimPortFootprint.SetReference(f"SP{PCBSlice.static_sp_index}")
+            self.SimPortFootprint.SetReference(f"SP{self.static_sp_index}")
             sp_instance = self.SimPortFootprint.Duplicate()
             self.board.Add(sp_instance)
-            index_list.append(PCBSlice.static_sp_index)
+            index_list.append(self.static_sp_index)
             flip_list.append(flip)
-            PCBSlice.static_sp_index += 1
+            self.static_sp_index += 1
 
         return index_list, flip_list
 
